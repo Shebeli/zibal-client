@@ -1,0 +1,20 @@
+[tool.poetry]
+authors = ["Shervin <Shervinsaeedi78@gmail.com>"]
+description = "Client for interacting with Zibal's IPG API endpoints."
+license = "MIT"
+name = "zibal-client"
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+pydantic = "^2.8.2"
+python = "^3.12"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-mock = "^3.14.0"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
