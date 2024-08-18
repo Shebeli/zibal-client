@@ -3,6 +3,7 @@ authors = ["Shervin <Shervinsaeedi78@gmail.com>"]
 description = "Client for interacting with Zibal's IPG API endpoints."
 license = "MIT"
 name = "zibal-client"
+packages = [{include = "zibal", from = "src"}]
 readme = "README.md"
 version = "0.1.0"
 
