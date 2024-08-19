@@ -47,7 +47,6 @@ def test_transaction_require(mocker):
 
     # prepare the client
     request_data = {
-        "merchant": "zibal",
         "amount": 25000,
         "callback_url": "https://localhost:8000/",
     }

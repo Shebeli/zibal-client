@@ -5,6 +5,8 @@ from zibal.models.schemas import (
     TransactionVerifyResponse,
 )
 
+from zibal.response_codes import STATUS_CODES
+
 
 # Since the prefered string casing in python is snake case,
 # while Zibal's IPG API endpoints handles the strings using camel case,
@@ -68,6 +70,7 @@ def test_verify_transaction_response_model():
         "paid_at": "2024-02-26T20:47:34.429060",
         "card_number": "6037889125376713",
         "status": 1,
+        "status_meaning": STATUS_CODES.get(1),
         "amount": 25000,
         "result": 100,
         "message": "some message",
