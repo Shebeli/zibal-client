@@ -1,3 +1,6 @@
 *__pycache__
 *.pytest_cache
 dist/
+.secret
+.ruff_cache
+.vscode
