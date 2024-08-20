@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, TypedDict, NotRequired
 from pydantic import BaseModel, ConfigDict, field_validator, HttpUrl
 from zibal.utils import to_camel_case_dict, to_snake_case_dict
 
-from zibal.response_codes import STATUS_CODES, WAGE_CODES
+from zibal.response_codes import STATUS_CODES, WAGE_CODES, RESULT_CODES
 
 
 # All of the data models with the word 'Request' ending in their name are
@@ -18,7 +18,7 @@ WageCode = Literal[0, 1, 2]
 IsoDate = str  # e.g. '2024-08-11T16:06:44.731255'
 
 
-class TransaactionBaseModel(BaseModel):
+class TransactionBase(BaseModel):
     def model_dump_to_camel(self, **kwargs) -> dict:
         """
         Same as model_dump method, but convert the snake case keys into camel
@@ -28,13 +28,13 @@ class TransaactionBaseModel(BaseModel):
         return to_camel_case_dict(data)
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> "TransaactionBaseModel":
+    def from_camel_case(cls, data: dict) -> "TransactionBase":
         """Initialize an instance by converting the dict camel case keys to snake case keys."""
         data = to_snake_case_dict(data)
         return cls(**data)
 
 
-class TransactionRequireRequest(TransaactionBaseModel):
+class TransactionRequireRequest(TransactionBase):
     """Used for starting a transaction process."""
 
     model_config = ConfigDict(strict=True)
@@ -52,8 +52,22 @@ class TransactionRequireRequest(TransaactionBaseModel):
     @field_validator("amount")
     def in_correct_range(cls, amount):
         if not (2000000000 > amount > 1500):
-            raise ValueError("Amount must be in the range 2,000,000,000 and 1,500")
+            raise ValueError("Amount must be in the range (2,000,000,000, 1,500)")
         return amount
+
+
+class FailedResultDetail(BaseModel):
+    """Used for result codes where the code is not 100 (i.e. not success)"""
+
+    result_code: int
+    result_meaning: str
+
+    @classmethod
+    def from_camel_case(cls, data: dict) -> BaseModel:
+        data["result_meaning"] = RESULT_CODES.get(
+            data["result_code"], "Unknown result code"
+        )
+        return super().from_camel_case(data)
 
 
 # Serialization: model instance (python) -> JSON data (or any kind of primtive data)
@@ -72,14 +86,14 @@ class TransactionRequireRequestType(TypedDict):
     national_code: NotRequired[str]
 
 
-class TransactionRequireResponse(TransaactionBaseModel):
+class TransactionRequireResponse(TransactionBase):
     track_id: int
     result: ResultCode
     pay_link: Optional[str] = None
     message: str
 
 
-class TransactionCallbackQueryParams(TransaactionBaseModel):
+class TransactionCallbackQueryParams(TransactionBase):
     """
     A GET HTTP request is called from zibal's webservice to the provided callbackUrl
     (the callbackUrl should have been provided in earlier levels of
@@ -94,7 +108,7 @@ class TransactionCallbackQueryParams(TransaactionBaseModel):
     status: StatusCode
 
 
-class TransactionVerifyRequest(TransaactionBaseModel):
+class TransactionVerifyRequest(TransactionBase):
     """Transactions that need to be verified by the app"""
 
     model_config = ConfigDict(strict=True)
@@ -103,7 +117,7 @@ class TransactionVerifyRequest(TransaactionBaseModel):
     track_id: int
 
 
-class TransactionVerifyResponse(TransaactionBaseModel):
+class TransactionVerifyResponse(TransactionBase):
     paid_at: IsoDate
     card_number: Optional[str] = None
     status: StatusCode
@@ -117,12 +131,12 @@ class TransactionVerifyResponse(TransaactionBaseModel):
     multiplexing_info: List[str] = []
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> TransaactionBaseModel:
+    def from_camel_case(cls, data: dict) -> TransactionBase:
         data["status_meaning"] = STATUS_CODES.get(data.get("status"), "Unknown status")
         return super().from_camel_case(data)
 
 
-class TransactionInquiryRequest(TransaactionBaseModel):
+class TransactionInquiryRequest(TransactionBase):
     """For inquirying the state of an already started transaction"""
 
     model_config = ConfigDict(strict=True)
@@ -131,7 +145,7 @@ class TransactionInquiryRequest(TransaactionBaseModel):
     track_id: int
 
 
-class TransactionInquiryResponse(TransaactionBaseModel):
+class TransactionInquiryResponse(TransactionBase):
     created_at: IsoDate
     paid_at: IsoDate
     verified_at: IsoDate
@@ -150,7 +164,7 @@ class TransactionInquiryResponse(TransaactionBaseModel):
     multiplexing_info: List[str] = []
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> TransaactionBaseModel:
+    def from_camel_case(cls, data: dict) -> TransactionBase:
         data["status_meaning"] = STATUS_CODES.get(data.get("status"), "Unknown status")
         data["wage_meaning"] = WAGE_CODES.get(data.get("wage"), "Unknown wage")
         return super().from_camel_case(data)
