@@ -3,7 +3,7 @@ from pydantic import ValidationError
 
 from zibal.client import ZibalIPGClient
 from zibal.response_codes import WAGE_CODES, STATUS_CODES
-from tests.responses import (
+from .responses import (
     VALID_REQUIRE_RESPONSE,
     VALID_VERIFY_RESPONSE,
     VALID_INQUIRY_RESPONSE,
