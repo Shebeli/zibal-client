@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional, TypedDict, NotRequired
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, HttpUrl
 from zibal.utils import to_camel_case_dict, to_snake_case_dict
 
 from zibal.response_codes import STATUS_CODES, WAGE_CODES
@@ -41,7 +41,7 @@ class TransactionRequireRequest(TransaactionBaseModel):
 
     merchant: str
     amount: int
-    callback_url: str
+    callback_url: HttpUrl
     description: Optional[str] = None
     order_id: Optional[str] = None
     mobile: Optional[str] = None
@@ -50,9 +50,9 @@ class TransactionRequireRequest(TransaactionBaseModel):
     national_code: str = None
 
     @field_validator("amount")
-    def minimum_amount(cls, amount):
-        if amount < 1500:
-            raise ValueError("Amount must be larger than 1500")
+    def in_correct_range(cls, amount):
+        if not (2000000000 > amount > 1500):
+            raise ValueError("Amount must be in the range 2,000,000,000 and 1,500")
         return amount
 
 
@@ -78,7 +78,6 @@ class TransactionRequireResponse(TransaactionBaseModel):
     pay_link: Optional[str] = None
     message: str
 
-    
 
 class TransactionCallbackQueryParams(TransaactionBaseModel):
     """
@@ -121,6 +120,7 @@ class TransactionVerifyResponse(TransaactionBaseModel):
     def from_camel_case(cls, data: dict) -> TransaactionBaseModel:
         data["status_meaning"] = STATUS_CODES.get(data.get("status"), "Unknown status")
         return super().from_camel_case(data)
+
 
 class TransactionInquiryRequest(TransaactionBaseModel):
     """For inquirying the state of an already started transaction"""

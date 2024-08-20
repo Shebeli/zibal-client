@@ -67,7 +67,7 @@ class ZibalIPGClient:
         Send a request to Zibal's IPG to initiate a new payment transaction.
         """
         request_model = TransactionRequireRequest(merchant=self.merchant, **kwargs)
-        request_data = request_model.model_dump_to_camel(exclude_none=True)
+        request_data = request_model.model_dump_to_camel(exclude_none=True, mode="json")
         response_data = self._handle_request(ZibalEndPoints.REQUEST, request_data)
         return TransactionRequireResponse.from_camel_case(response_data)
 
