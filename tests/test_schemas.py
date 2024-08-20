@@ -21,10 +21,10 @@ def test_require_transaction_request_model():
         "callback_url": "https://somecallbackurl.com",
     }  # data inputted by the client
     data_model = TransactionRequireRequest(**request_data)
-    assert data_model.model_dump_to_camel(exclude_none=True) == {
+    assert data_model.model_dump_to_camel(exclude_none=True, mode="json") == {
         "merchant": "zibal",
         "amount": 20000,
-        "callbackUrl": "https://somecallbackurl.com",
+        "callbackUrl": "https://somecallbackurl.com/",
     }
 
 

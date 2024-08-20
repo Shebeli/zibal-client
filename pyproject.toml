@@ -5,7 +5,7 @@ license = "MIT"
 name = "zibal-client"
 packages = [{include = "zibal", from = "src"}]
 readme = "README.md"
-version = "0.1.3"
+version = "0.1.4"
 repository = "https://github.com/Shebeli/zibal-client"
 
 [tool.poetry.dependencies]
