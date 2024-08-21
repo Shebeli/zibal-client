@@ -4,3 +4,5 @@ dist/
 .secret
 .ruff_cache
 .vscode
+tox.ini
+.tox

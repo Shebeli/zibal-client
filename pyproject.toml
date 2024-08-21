@@ -5,29 +5,28 @@ license = "MIT"
 name = "zibal-client"
 packages = [{include = "zibal", from = "src"}]
 readme = "README.md"
-version = "0.2.0"
 repository = "https://github.com/Shebeli/zibal-client"
+version = "0.2.0"
 
 [tool.poetry.dependencies]
 pydantic = "^2.8.2"
-python = "^3.12"
+python = ">=3.9,<4.0"
 requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
-pytest-mock = "^3.14.0"
 commitizen = "^3.29.0"
 pre-commit = "^3.8.0"
-
+pytest = "^8.3.2"
+pytest-mock = "^3.14.0"
+tox = "^4.18.0"
 
 [tool.commitizen]
+major_version_zero = true
 name = "cz_conventional_commits"
 tag_format = "v$version"
-version_scheme = "pep440"
-version_provider = "poetry"
 update_changelog_on_bump = true
-major_version_zero = true
-[project.urls]
+version_provider = "poetry"
+version_scheme = "pep440"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

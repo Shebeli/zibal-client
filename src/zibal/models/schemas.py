@@ -1,4 +1,4 @@
-from typing import List, Literal, NotRequired, Optional, TypedDict
+from typing import List, Literal, Optional, TypedDict
 
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
@@ -44,7 +44,7 @@ class TransactionRequireRequest(TransactionBase):
     description: Optional[str] = None
     order_id: Optional[str] = None
     mobile: Optional[str] = None
-    allowed_cards: List[str] | None = None
+    allowed_cards: Optional[List[str]] = None
     ledger_id: Optional[str] = None
     national_code: str = None
 
@@ -70,12 +70,12 @@ class TransactionRequireRequestType(TypedDict):
     merchant: str
     amount: int
     callback_url: str
-    description: NotRequired[str]
-    order_id: NotRequired[str]
-    mobile: NotRequired[str]
-    allowed_cards: NotRequired[[List[str]]]
-    ledger_id: NotRequired[str]
-    national_code: NotRequired[str]
+    description: Optional[str]
+    order_id: Optional[str]
+    mobile: Optional[str]
+    allowed_cards: Optional[List[str]]
+    ledger_id: Optional[str]
+    national_code: Optional[str]
 
 
 class TransactionRequireResponse(TransactionBase):

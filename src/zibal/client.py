@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 
 import requests
 from requests.models import Response
@@ -59,7 +59,7 @@ class ZibalIPGClient:
             )
         return response.json()
 
-    def _validate_response(self, response_data: dict) -> FailedResultDetail | None:
+    def _validate_response(self, response_data: dict) -> Optional[FailedResultDetail]:
         """
         Since Zibal's responses status code is 200 under all circumenstances,
         any result codes other than 100 means the request was non-successful.
