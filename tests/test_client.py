@@ -1,13 +1,18 @@
 import pytest
 from pydantic import ValidationError
 
+from zibal.response_codes import RESULT_CODES
 from zibal.client import ZibalIPGClient
 from zibal.response_codes import WAGE_CODES, STATUS_CODES
 from .responses import (
     VALID_REQUIRE_RESPONSE,
     VALID_VERIFY_RESPONSE,
     VALID_INQUIRY_RESPONSE,
+    FAILED_VERIFY_RESPONSE,
+    NON_EXISTENT_VERIFY_RESPONSE,
+    ALREADY_VERIFIED_VERIFY_RESPONSE,
 )
+from zibal.exceptions import ResultError
 
 
 @pytest.fixture
@@ -21,7 +26,12 @@ def mock_request(mocker):
     return mock
 
 
-def test_transaction_require(mock_request):
+# --------------------------
+# Transaction require
+# --------------------------
+
+
+def test_valid_transaction_require(mock_request):
     mock_request(VALID_REQUIRE_RESPONSE)
 
     # prepare the client
@@ -47,13 +57,20 @@ def test_transaction_require(mock_request):
         ({"callback_url": "https://localhost:8000/"}),
     ],
 )
-def test_invalid_transaction_require(request_data):
+def test_transaction_require_raises_validation_error(request_data):
+    # As long as the request data is valid, since the response is mocked, it
+    # doesn't matter what is the request data
     client = ZibalIPGClient("zibal")
     with pytest.raises(ValidationError):
         client.request_transaction(**request_data)
 
 
-def test_transaction_verify(mock_request):
+# --------------------------
+# Transaction Verification
+# --------------------------
+
+
+def test_valid_transaction_verify(mock_request):
     mock_request(VALID_VERIFY_RESPONSE)
 
     client = ZibalIPGClient("zibal")
@@ -66,15 +83,62 @@ def test_transaction_verify(mock_request):
     assert response_data_model.message == VALID_VERIFY_RESPONSE["message"]
 
 
-def test_invalid_transaction_verify(mock_request):
-    mock_request(VALID_VERIFY_RESPONSE)
-
+@pytest.mark.parametrize(
+    "track_id",
+    [
+        "231323",
+        "",
+        123.323,
+    ],
+)
+def test_transaction_verify_raises_validation_error(track_id):
     client = ZibalIPGClient("zibal")
+    with pytest.raises(ValidationError):
+        client.verify_transaction(track_id=track_id)
 
-    client.verify_transaction(track_id=3714061657)
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        FAILED_VERIFY_RESPONSE,
+        NON_EXISTENT_VERIFY_RESPONSE,
+        ALREADY_VERIFIED_VERIFY_RESPONSE,
+    ],
+)
+def test_transaction_verify_raises_results_error(mock_request, response_data):
+    mock_request(response_data)
+
+    client = ZibalIPGClient("zibal", raise_on_invalid_result=True)
+    with pytest.raises(ResultError) as exc_info:
+        client.verify_transaction(track_id=1312333)
+    assert RESULT_CODES[response_data.get("result")] in str(exc_info.value)
 
 
-def test_transaction_inquiry(mock_request):
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        FAILED_VERIFY_RESPONSE,
+        NON_EXISTENT_VERIFY_RESPONSE,
+        ALREADY_VERIFIED_VERIFY_RESPONSE,
+    ],
+)
+def test_transaction_verify_returns_results_error(mock_request, response_data):
+    mock_request(response_data)
+
+    client = ZibalIPGClient("zibal", raise_on_invalid_result=False)
+    response_data_model = client.verify_transaction(track_id=123456)
+    assert response_data_model.result_code == response_data["result"]
+    assert response_data_model.result_meaning == RESULT_CODES.get(
+        response_data["result"]
+    )
+
+
+# --------------------------
+# Transaction Inquiry
+# --------------------------
+
+
+def test_valid_transaction_inquiry(mock_request):
     # prepare the mock
     mock_request(VALID_INQUIRY_RESPONSE)
 
