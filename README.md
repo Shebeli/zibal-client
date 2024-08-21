@@ -71,7 +71,8 @@ print(data)
 در این [لینک](https://docs.pydantic.dev/latest/api/base_model/) میتوانید از متد های دیگر این مدل و نحوه کار با آن ها مطلع شوید. 
 ## Features to be added
 
-- Handle response and result errors more gracefully and in a structured way
+- Handle result errors more gracefully and in a robust way✅
+- Add option to enable/disable pydantic validation error raise
 - Implement a new client for IPG's Lazy methods which is quite similar to ZibalIPGClient
 - Add new test cases using mocks for handling expected error cases for ZibalClient
 - Add new clients for other Zibal's services, such as Zibal's comprehensive payment service and inquiry payment service
