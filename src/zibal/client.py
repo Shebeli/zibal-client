@@ -31,7 +31,7 @@ class ZibalEndPoints(str, Enum):
 class ZibalIPGClient:
     """
     For testing IPG API endpoints, sandbox mode can be enabled by setting
-    'merchant' to 'zibal' when initializing the class.
+    `merchant` to `zibal` when initializing the class.
 
     If `raise_result_error` flag is set to True , a `ResultError` exception
     will be raised if `result` code is not 100 in the body of responses.
@@ -40,14 +40,10 @@ class ZibalIPGClient:
     def __init__(
         self,
         merchant: str,
-        raise_result_error: bool = False,
+        raise_on_invalid_result: bool = False,
     ) -> None:
-        self._merchant = merchant
-        self.raise_result_error = raise_result_error
-
-    @property
-    def merchant(self):
-        return self._merchant
+        self.merchant = merchant
+        self.raise_on_invalid_result = raise_on_invalid_result
 
     def _process_request(self, endpoint: ZibalEndPoints, data: dict) -> dict:
         url = self._construct_url(endpoint)
@@ -71,10 +67,10 @@ class ZibalIPGClient:
         """
         result_code = response_data.get("result")
         if result_code != 100:
-            if self.raise_result_error:
+            if self.raise_on_invalid_result:
                 result_message = RESULT_CODES.get(result_code, "Unknown result code")
                 raise ResultError(result_message)
-            return FailedResultDetail.from_camel_case(result_code=result_code)
+            return FailedResultDetail(result_code=result_code, result_meaning=RESULT_CODES[result_code])
 
     def request_transaction(
         self, **kwargs: TransactionRequireRequestType

@@ -62,13 +62,6 @@ class FailedResultDetail(BaseModel):
     result_code: int
     result_meaning: str
 
-    @classmethod
-    def from_camel_case(cls, data: dict) -> BaseModel:
-        data["result_meaning"] = RESULT_CODES.get(
-            data["result_code"], "Unknown result code"
-        )
-        return super().from_camel_case(data)
-
 
 # Serialization: model instance (python) -> JSON data (or any kind of primtive data)
 # Deserialization:  JSON data (or data from client) -> model instance (python)
