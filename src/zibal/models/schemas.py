@@ -1,10 +1,9 @@
-from typing import List, Literal, Optional, TypedDict, NotRequired
+from typing import List, Literal, NotRequired, Optional, TypedDict
 
-from pydantic import BaseModel, ConfigDict, field_validator, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
+
+from zibal.response_codes import STATUS_CODES, WAGE_CODES
 from zibal.utils import to_camel_case_dict, to_snake_case_dict
-
-from zibal.response_codes import STATUS_CODES, WAGE_CODES, RESULT_CODES
-
 
 # All of the data models with the word 'Request' ending in their name are
 # the data structures used in body of HTTP requests, while the data models

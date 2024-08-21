@@ -4,10 +4,10 @@ from typing import Union
 import requests
 from requests.models import Response
 
-
 from zibal.configs import IPG_BASE_URL, PAYMENT_BASE_URL
 from zibal.exceptions import ResponseError, ResultError
 from zibal.models.schemas import (
+    FailedResultDetail,
     TransactionInquiryRequest,
     TransactionInquiryResponse,
     TransactionRequireRequest,
@@ -15,7 +15,6 @@ from zibal.models.schemas import (
     TransactionRequireResponse,
     TransactionVerifyRequest,
     TransactionVerifyResponse,
-    FailedResultDetail,
 )
 from zibal.response_codes import (
     RESULT_CODES,
