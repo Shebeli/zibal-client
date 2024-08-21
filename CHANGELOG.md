@@ -1,3 +1,9 @@
+## v0.2.1 (2024-08-21)
+
+### Fix
+
+- add new python version support with refactors
+
 ## v0.2.0 (2024-08-21)
 
 ### Feat
