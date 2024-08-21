@@ -1,3 +1,14 @@
+## v0.2.0 (2024-08-21)
+
+### Feat
+
+- add new data models for result error handling
+- add the option to enable/disable raising errors for result code
+
+### Fix
+
+- FailedResultDetail in _validate_response are now called with proper args
+
 ## v0.1.5 (2024-08-20)
 
 ## v0.1.4 (2024-08-20)
