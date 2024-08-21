@@ -1,10 +1,9 @@
-
 # کلاینت زیبال
 
-هدف از این پروژه, مهیا کردن کلاینتی برای کار با 
-خدمات پرداختی زیبال بصورت مفید و موثر می باشد. 
+هدف از این پروژه, مهیا کردن کلاینتی برای کار با
+خدمات پرداختی زیبال بصورت مفید و موثر می باشد.
 
-شما میتوانید با استفاده از این پکیچ, در اپلیکیشن های خود از خدمات  پرداختی زیبال همچون درخواست پرداخت, تایید پرداخت و ...  بهره مند شوید.
+شما میتوانید با استفاده از این پکیچ, در اپلیکیشن های خود از خدمات پرداختی زیبال همچون درخواست پرداخت, تایید پرداخت و ... بهره مند شوید.
 
 ## نصب
 
@@ -13,15 +12,12 @@
 ```bash
 pip install zibal-client
 ```
-    
+
 ## نحوه استفاده
-
-
 
 میتوانید از کد مرچنت `zibal` جهت تست سرویس درگاه پرداختی زیبال استفاده کنید.
 
 تمامی تراکنش های ایجاد شده با این کد مرچنت فرضی هست و تراکنش واقعی صورت نمیگیرد.
-
 
 ```python
 from zibal.client import ZibalIPGClient
@@ -35,12 +31,18 @@ request_data = client.request_transaction(
     callback_url="https://somecallbackurl.com",
 )
 
+print(requst_data.message)
+# success
+
 # ایجاد لینک پرداختی
 track_id = request_data.track_id
 payment_link = client.create_payment_link(track_id)
 
-# تایید پرداخت
+# تایید پرداخت (پس از پرداخت توسط کاربر، این تابع برای تاییدیه باید ران شود)
 verify_data = client.verify_transaction(track_id)
+
+print(verify_data.message)
+# success
 
 # استعلام پرداخت
 inquiry_data = client.inquiry_transaction(track_id)
@@ -58,22 +60,23 @@ request_data = client.request_transaction(
     callback_url="https://somecallbackurl.com",
 )
 
-data = request_data.model_dump()
+data = request_data.model_dump(exclude_none=True)
 print(data)
 # {
-#     "message": "success",
-#     "result": 100,
-#     "trackId": 3714061627,
+#     'track_id': 3722304104,
+#     'result': 100,
+#     'message': 'success'
 # }
 
 ```
 
-در این [لینک](https://docs.pydantic.dev/latest/api/base_model/) میتوانید از متد های دیگر این مدل و نحوه کار با آن ها مطلع شوید. 
+در این [لینک](https://docs.pydantic.dev/latest/api/base_model/) میتوانید از متد های دیگر این مدل و نحوه کار با آن ها مطلع شوید.
+
 ## Features to be added
 
-- Handle result errors more gracefully and in a robust way✅
-- Add different python versions support starting from 3.9 up to 3.12✅
+- Handle result errors more gracefully and in a robust way ✅
+- Add different python versions support starting from 3.9 up to 3.12 ✅
+- Add new test cases for handling expected error cases for ZibalIPGClient ✅
 - Add option to enable/disable pydantic validation error raise
 - Implement a new client for IPG's Lazy methods which is quite similar to ZibalIPGClient
-- Add new test cases using mocks for handling expected error cases for ZibalClient
 - Add new clients for other Zibal's services, such as Zibal's comprehensive payment service and inquiry payment service
