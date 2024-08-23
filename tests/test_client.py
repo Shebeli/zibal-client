@@ -1,7 +1,10 @@
+import logging
+
 import pytest
 from pydantic import ValidationError
 
-from zibal.client import ZibalIPGClient
+from zibal.client import ZibalEndPoints, ZibalIPGClient
+from zibal.configs import IPG_BASE_URL
 from zibal.exceptions import ResultError
 from zibal.response_codes import RESULT_CODES, STATUS_CODES, WAGE_CODES
 
@@ -26,22 +29,48 @@ def mock_request(mocker):
     return mock
 
 
+@pytest.fixture
+def logger_and_mock_logging(mocker):
+    logger = logging.getLogger("zibal.client")
+    mock_logging = mocker.patch.object(logger, "info")
+    return logger, mock_logging
+
+
 # --------------------------
-# Transaction require
+# Transaction require Tests
 # --------------------------
 
 
-def test_valid_transaction_require(mock_request):
+def test_valid_transaction_require(mocker, mock_request):
+    # Prepare the mock
     mock_request(VALID_REQUIRE_RESPONSE)
+    logger = logging.getLogger("zibal.client")
+    mock_logging = mocker.patch.object(logger, "info")
 
-    # prepare the client
+    # Prepare the client and call the method
     request_data = {
         "amount": 25000,
         "callback_url": "https://localhost:8000/",
     }
-    client = ZibalIPGClient("zibal")
+    client = ZibalIPGClient("zibal", logger=logger)
     response_data_model = client.request_transaction(**request_data)
 
+    # Prepare the expected log data
+    expected_log_url = IPG_BASE_URL + ZibalEndPoints.REQUEST
+    expected_log_data = {
+        "merchant": "zibal",
+        "amount": 25000,
+        "callbackUrl": "https://localhost:8000/",
+    }
+    log_data = (
+        f"A successful HTTP request has been made to: {expected_log_url} "
+        f"with data: {expected_log_data}"
+    )
+
+    # Logging assertion
+    mock_logging.assert_called_once_with(log_data)
+
+    # Response assertion
     assert response_data_model.track_id == VALID_REQUIRE_RESPONSE["trackId"]
     assert response_data_model.result == VALID_REQUIRE_RESPONSE["result"]
     assert response_data_model.message == VALID_REQUIRE_RESPONSE["message"]
@@ -70,11 +99,25 @@ def test_transaction_require_raises_validation_error(request_data):
 # --------------------------
 
 
-def test_valid_transaction_verify(mock_request):
+def test_valid_transaction_verify(mocker, mock_request):
+    # Prepare the mock
     mock_request(VALID_VERIFY_RESPONSE)
+    logger = logging.getLogger("zibal.client")
+    mock_logging = mocker.patch.object(logger, "info")
 
-    client = ZibalIPGClient("zibal")
-    response_data_model = client.verify_transaction(track_id=3714061657)
+    # Prepare the client and call the method
+    track_id = 12345
+    client = ZibalIPGClient("zibal", logger=logger)
+    response_data_model = client.verify_transaction(track_id=track_id)
+
+    # Prepare the expected log data
+    expected_url = IPG_BASE_URL + ZibalEndPoints.VERIFY
+    expected_log_data = {"merchant": "zibal", "trackId": track_id}
+    log_data = (
+        f"A successful HTTP request has been made to: {expected_url} "
+        f"with data: {expected_log_data}"
+    )
+    mock_logging.assert_called_once_with(log_data)
 
     assert response_data_model.paid_at == VALID_VERIFY_RESPONSE["paidAt"]
     assert response_data_model.status == VALID_VERIFY_RESPONSE["status"]
@@ -138,14 +181,27 @@ def test_transaction_verify_returns_results_error(mock_request, response_data):
 # --------------------------
 
 
-def test_valid_transaction_inquiry(mock_request):
-    # prepare the mock
+def test_valid_transaction_inquiry(mocker, mock_request):
+    # Prepare the mock
     mock_request(VALID_INQUIRY_RESPONSE)
+    logger = logging.getLogger("zibal.client")
+    mock_logging = mocker.patch.object(logger, "info")
 
-    # client, assuming a transaction has already been verified
+    # Prepare the client and call the method
+    track_id = 12345
     client = ZibalIPGClient("zibal")
-    response_data_model = client.inquiry_transaction(track_id=3714061657)
+    response_data_model = client.inquiry_transaction(track_id=track_id)
 
+    # Prepare the expected log data and assert the log
+    expected_log_url = IPG_BASE_URL + ZibalEndPoints.INQUIRY
+    expected_log_data = {"merchant": "zibal", "trackId": track_id}
+    log_data = (
+        f"A successful HTTP request has been made to: {expected_log_url} "
+        f"with data: {expected_log_data}"
+    )
+    mock_logging.assert_called_once_with(log_data)
+
+    # Assert response data
     assert response_data_model.status == VALID_INQUIRY_RESPONSE["status"]
     assert response_data_model.amount == VALID_INQUIRY_RESPONSE["amount"]
     assert (
