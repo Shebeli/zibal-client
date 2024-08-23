@@ -1,11 +1,13 @@
+import logging
 from enum import Enum
-from typing import Union, Optional
+from logging import Logger
+from typing import Optional, Union
 
 import requests
-from requests.models import Response
+from requests.exceptions import RequestException
 
 from zibal.configs import IPG_BASE_URL, PAYMENT_BASE_URL
-from zibal.exceptions import ResponseError, ResultError
+from zibal.exceptions import RequestError, ResultError
 from zibal.models.schemas import (
     FailedResultDetail,
     TransactionInquiryRequest,
@@ -32,31 +34,47 @@ class ZibalIPGClient:
     For testing IPG API endpoints, sandbox mode can be enabled by setting
     `merchant` to `zibal` when initializing the class.
 
-    If `raise_result_error` flag is set to True , a `ResultError` exception
-    will be raised if `result` code is not 100 in the body of responses.
+    If `raise_on_invalid_result` flag is set to True , when calling transaction
+    related methods and the `result` code in the body of response is not 100,
+    a `ResultError` exception will be raised.
+
+    Can pass a `logger` instance for logging network requests.
     """
 
     def __init__(
         self,
         merchant: str,
         raise_on_invalid_result: bool = False,
-    ) -> None:
+        request_timeout: int = 7,
+        logger: Optional[Logger] = None,
+    ):
+        if logger is None:
+            self.logger = logging.getLogger(__name__)
+            self.logger.addHandler(logging.NullHandler())
+        else:
+            self.logger = logger
         self.merchant = merchant
         self.raise_on_invalid_result = raise_on_invalid_result
+        self.request_timeout = request_timeout
 
     def _process_request(self, endpoint: ZibalEndPoints, data: dict) -> dict:
-        url = self._construct_url(endpoint)
-        response = requests.post(url=url, json=data)
-        return self._process_response(response)
+        url = IPG_BASE_URL + endpoint
+        try:
+            response = requests.post(url=url, json=data, timeout=self.request_timeout)
+        except RequestException as err:
+            self.logger.error(f"A network request error has occured: {err}")
+            raise RequestError(f"A network request error has occured: {err}")
 
-    def _construct_url(self, endpoint: ZibalEndPoints) -> str:
-        return IPG_BASE_URL + endpoint
-
-    def _process_response(self, response: Response) -> dict:
         if response.status_code != 200:
-            raise ResponseError(
-                f"An unexpected request error has occured \n status code: {response.status_code}, body: {response.content}"
+            self.logger.error(
+                f"Unexpected response status code: {response.status_code} content: {response.content}"
             )
+            raise RequestError(
+                f"Unexpected response status code: {response.status_code} content: {response.content}"
+            )
+        self.logger.info(
+            f"A successful HTTP request has been made to: {url} with data: {data}"
+        )
         return response.json()
 
     def _validate_response(self, response_data: dict) -> Optional[FailedResultDetail]:
@@ -69,7 +87,27 @@ class ZibalIPGClient:
             if self.raise_on_invalid_result:
                 result_message = RESULT_CODES.get(result_code, "Unknown result code")
                 raise ResultError(result_message)
-            return FailedResultDetail(result_code=result_code, result_meaning=RESULT_CODES[result_code])
+            return FailedResultDetail(
+                result_code=result_code, result_meaning=RESULT_CODES[result_code]
+            )
+
+    def check_service_status(self) -> bool:
+        """Check to see if the service is up and running, will log errors if there are any."""
+        try:
+            response = requests.head(IPG_BASE_URL, timeout=self.request_timeout)
+            if response.status_code != 200:
+                self.logger.warning(
+                    f"Unexpected response status code on service check: {response.status_code} content: {response.content}"
+                )
+                return False
+
+        except RequestException as err:
+            self.logger.warning(
+                f"A network request error has occured on service check: {err}"
+            )
+            return False
+
+        return True
 
     def request_transaction(
         self, **kwargs: TransactionRequireRequestType
