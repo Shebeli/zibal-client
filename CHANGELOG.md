@@ -1,3 +1,9 @@
+## v0.3.0 (2024-08-23)
+
+### Feat
+
+- **IPGClient**: Add logging and error handling support for network requests
+
 ## v0.2.1 (2024-08-21)
 
 ### Fix
