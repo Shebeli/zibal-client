@@ -74,9 +74,10 @@ print(data)
 
 ## Features to be added
 
-- Handle result errors more gracefully and in a robust way ✅
+- Handle result errors more gracefully and in a robust manner ✅
 - Add different python versions support starting from 3.9 up to 3.12 ✅
 - Add new test cases for handling expected error cases for ZibalIPGClient ✅
+- Handle request network and connection errors more gracefully and in a robust manner
 - Add option to enable/disable pydantic validation error raise
 - Implement a new client for IPG's Lazy methods which is quite similar to ZibalIPGClient
 - Add new clients for other Zibal's services, such as Zibal's comprehensive payment service and inquiry payment service
