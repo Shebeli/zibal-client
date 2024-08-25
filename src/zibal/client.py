@@ -123,10 +123,6 @@ class ZibalIPGClient:
             return result_error
         return TransactionRequireResponse.from_camel_case(response_data)
 
-    def create_payment_link(self, track_id: int) -> str:
-        """Constructs the payment link using track_id"""
-        return PAYMENT_BASE_URL + str(track_id)
-
     def verify_transaction(
         self, track_id: int
     ) -> Union[TransactionVerifyResponse, FailedResultDetail]:
@@ -159,3 +155,8 @@ class ZibalIPGClient:
         if result_error:
             return result_error
         return TransactionInquiryResponse.from_camel_case(response_data)
+
+    @staticmethod
+    def create_payment_link(track_id: int) -> str:
+        """Constructs the payment link using track_id"""
+        return PAYMENT_BASE_URL + str(track_id)
