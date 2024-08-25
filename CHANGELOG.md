@@ -1,3 +1,9 @@
+## v0.3.1 (2024-08-25)
+
+### Fix
+
+- 'create_payment_link' is now a staticmethod
+
 ## v0.3.0 (2024-08-23)
 
 ### Feat
