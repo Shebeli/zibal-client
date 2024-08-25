@@ -78,6 +78,7 @@ print(data)
 - Handle network errors more gracefully ✅
 - Add logging for network requests ✅
 - Add different python versions support starting from 3.9 up to 3.12 ✅
+- Add retrying mechanism when the request fails
 - Add option to enable/disable pydantic validation error raise
 - Implement a new client for IPG's Lazy methods which is quite similar to ZibalIPGClient
 - Add new clients for other Zibal's services, such as Zibal's comprehensive payment service and inquiry payment service
