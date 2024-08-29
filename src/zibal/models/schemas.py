@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, TypedDict
+from typing import List, Literal, Optional, TypedDict, Type, TypeVar, Self
 
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
@@ -15,6 +15,7 @@ FeeDeductionCodes = Literal[0, 1, 2]
 StatusCode = Literal[-1, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 WageCode = Literal[0, 1, 2]
 IsoDate = str  # e.g. '2024-08-11T16:06:44.731255'
+T = TypeVar("T", bound="TransactionBase")
 
 
 class TransactionBase(BaseModel):
@@ -27,7 +28,7 @@ class TransactionBase(BaseModel):
         return to_camel_case_dict(data)
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> "TransactionBase":
+    def from_camel_case(cls: Type[T], data: dict) -> T:
         """Initialize an instance by converting the dict camel case keys to snake case keys."""
         data = to_snake_case_dict(data)
         return cls(**data)
@@ -46,7 +47,7 @@ class TransactionRequireRequest(TransactionBase):
     mobile: Optional[str] = None
     allowed_cards: Optional[List[str]] = None
     ledger_id: Optional[str] = None
-    national_code: str = None
+    national_code: Optional[str] = None
 
     @field_validator("amount")
     def in_correct_range(cls, amount):
@@ -123,8 +124,10 @@ class TransactionVerifyResponse(TransactionBase):
     multiplexing_info: List[str] = []
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> TransactionBase:
-        data["status_meaning"] = STATUS_CODES.get(data.get("status"), "Unknown status")
+    def from_camel_case(cls: Type[T], data: dict) -> T:
+        status = data.get("status")
+        if status is not None:
+            data["status_meaning"] = STATUS_CODES.get(status, "Unknown status")
         return super().from_camel_case(data)
 
 
@@ -142,21 +145,24 @@ class TransactionInquiryResponse(TransactionBase):
     paid_at: IsoDate
     verified_at: IsoDate
     card_number: Optional[str] = None
-    status: StatusCode
-    status_meaning: str
+    status: Optional[StatusCode]
+    status_meaning: Optional[str]
     amount: int
     ref_number: Optional[int] = None  # if successful
     description: str
     order_id: Optional[str] = None
-    wage: WageCode
-    wage_meaning: str
+    wage: Optional[WageCode]
+    wage_meaning: Optional[str]
     shaparak_fee: int
     result: ResultCode
     message: str
     multiplexing_info: List[str] = []
 
     @classmethod
-    def from_camel_case(cls, data: dict) -> TransactionBase:
-        data["status_meaning"] = STATUS_CODES.get(data.get("status"), "Unknown status")
-        data["wage_meaning"] = WAGE_CODES.get(data.get("wage"), "Unknown wage")
+    def from_camel_case(cls: Type[T], data: dict) -> T:
+        status = data.get("status")
+        wage = data.get("wage")
+        if status is not None and wage is not None:
+            data["status_meaning"] = STATUS_CODES.get(status, "Unknown status")
+            data["wage_meaning"] = WAGE_CODES.get(wage, "Unknown wage")
         return super().from_camel_case(data)

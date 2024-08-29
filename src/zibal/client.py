@@ -38,12 +38,13 @@ class ZibalIPGClient:
     related methods and the `result` code in the body of response is not 100,
     a `ResultError` exception will be raised.
 
-    Can pass a `logger` instance for logging network requests.
+    A `logger` instance can be passed for logging network requests.
     """
 
     def __init__(
         self,
         merchant: str,
+        callback_url: str,
         raise_on_invalid_result: bool = False,
         request_timeout: int = 7,
         logger: Optional[Logger] = None,
@@ -56,6 +57,7 @@ class ZibalIPGClient:
         self.merchant = merchant
         self.raise_on_invalid_result = raise_on_invalid_result
         self.request_timeout = request_timeout
+        self.callback_url = callback_url
 
     def _process_request(self, endpoint: ZibalEndPoints, data: dict) -> dict:
         url = IPG_BASE_URL + endpoint
@@ -82,7 +84,7 @@ class ZibalIPGClient:
         Since Zibal's responses status code is 200 under all circumenstances,
         any result codes other than 100 means the request was non-successful.
         """
-        result_code = response_data.get("result")
+        result_code = response_data.get("result", -100)
         if result_code != 100:
             if self.raise_on_invalid_result:
                 result_message = RESULT_CODES.get(result_code, "Unknown result code")
@@ -90,6 +92,7 @@ class ZibalIPGClient:
             return FailedResultDetail(
                 result_code=result_code, result_meaning=RESULT_CODES[result_code]
             )
+        return None
 
     def check_service_status(self) -> bool:
         """Check to see if the service is up and running, will log errors if there are any."""
