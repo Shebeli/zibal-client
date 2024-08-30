@@ -1,3 +1,13 @@
+## v0.3.2 (2024-08-30)
+
+### Fix
+
+- `request_transaction` method now expliclity uses arguments rather than **kwargs.
+
+### Refactor
+
+- type refactors
+
 ## v0.3.1 (2024-08-25)
 
 ### Fix
