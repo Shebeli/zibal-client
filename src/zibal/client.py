@@ -4,6 +4,7 @@ from logging import Logger
 from typing import Optional, Union
 
 import requests
+from pydantic import HttpUrl
 from requests.exceptions import RequestException
 
 from zibal.configs import IPG_BASE_URL, PAYMENT_BASE_URL
@@ -13,7 +14,6 @@ from zibal.models.schemas import (
     TransactionInquiryRequest,
     TransactionInquiryResponse,
     TransactionRequireRequest,
-    TransactionRequireRequestType,
     TransactionRequireResponse,
     TransactionVerifyRequest,
     TransactionVerifyResponse,
@@ -44,7 +44,6 @@ class ZibalIPGClient:
     def __init__(
         self,
         merchant: str,
-        callback_url: str,
         raise_on_invalid_result: bool = False,
         request_timeout: int = 7,
         logger: Optional[Logger] = None,
@@ -57,29 +56,33 @@ class ZibalIPGClient:
         self.merchant = merchant
         self.raise_on_invalid_result = raise_on_invalid_result
         self.request_timeout = request_timeout
-        self.callback_url = callback_url
 
     def _process_request(self, endpoint: ZibalEndPoints, data: dict) -> dict:
         url = IPG_BASE_URL + endpoint
         try:
-            response = requests.post(url=url, json=data, timeout=self.request_timeout)
+            response = requests.post(
+                url=url, json=data, timeout=self.request_timeout
+            )
         except RequestException as err:
             self.logger.error(f"A network request error has occured: {err}")
             raise RequestError(f"A network request error has occured: {err}")
 
         if response.status_code != 200:
+            response_content = str(response.content)
             self.logger.error(
-                f"Unexpected response status code: {response.status_code} content: {response.content}"
+                f"Unexpected response status code: {response.status_code} content: {response_content}"
             )
             raise RequestError(
-                f"Unexpected response status code: {response.status_code} content: {response.content}"
+                f"Unexpected response status code: {response.status_code} content: {response_content}"
             )
         self.logger.info(
             f"A successful HTTP request has been made to: {url} with data: {data}"
         )
         return response.json()
 
-    def _validate_response(self, response_data: dict) -> Optional[FailedResultDetail]:
+    def _validate_response(
+        self, response_data: dict
+    ) -> Optional[FailedResultDetail]:
         """
         Since Zibal's responses status code is 200 under all circumenstances,
         any result codes other than 100 means the request was non-successful.
@@ -87,20 +90,30 @@ class ZibalIPGClient:
         result_code = response_data.get("result", -100)
         if result_code != 100:
             if self.raise_on_invalid_result:
-                result_message = RESULT_CODES.get(result_code, "Unknown result code")
+                result_message = RESULT_CODES.get(
+                    result_code, "Unknown result code"
+                )
                 raise ResultError(result_message)
             return FailedResultDetail(
-                result_code=result_code, result_meaning=RESULT_CODES[result_code]
+                result_code=result_code,
+                result_meaning=RESULT_CODES[result_code],
             )
         return None
 
     def check_service_status(self) -> bool:
-        """Check to see if the service is up and running, will log errors if there are any."""
+        """
+        Check to see if the service is up and running, will log errors if
+        there are any errors.
+        """
         try:
-            response = requests.head(IPG_BASE_URL, timeout=self.request_timeout)
+            response = requests.head(
+                IPG_BASE_URL, timeout=self.request_timeout
+            )
             if response.status_code != 200:
+                response_content = str(response.content)
                 self.logger.warning(
-                    f"Unexpected response status code on service check: {response.status_code} content: {response.content}"
+                    "Unexpected response status code on service check:"
+                    f"{response.status_code} content: {response_content}"
                 )
                 return False
 
@@ -113,14 +126,34 @@ class ZibalIPGClient:
         return True
 
     def request_transaction(
-        self, **kwargs: TransactionRequireRequestType
+        self,
+        amount: int,
+        callback_url: HttpUrl,
+        description: Optional[str] = None,
+        order_id: Optional[str] = None,
+        mobile: Optional[str] = None,
+        allowed_cards: Optional[list[str]] = None,
+        ledger_id: Optional[str] = None,
     ) -> Union[TransactionRequireResponse, FailedResultDetail]:
         """
         Send a request to Zibal's IPG to initiate a new payment transaction.
         """
-        request_model = TransactionRequireRequest(merchant=self.merchant, **kwargs)
-        request_data = request_model.model_dump_to_camel(exclude_none=True, mode="json")
-        response_data = self._process_request(ZibalEndPoints.REQUEST, request_data)
+        request_model = TransactionRequireRequest(
+            merchant=self.merchant,
+            callback_url=callback_url,
+            amount=amount,
+            description=description,
+            order_id=order_id,
+            mobile=mobile,
+            allowed_cards=allowed_cards,
+            ledger_id=ledger_id,
+        )
+        request_data = request_model.model_dump_to_camel(
+            exclude_none=True, mode="json"
+        )
+        response_data = self._process_request(
+            ZibalEndPoints.REQUEST, request_data
+        )
         result_error = self._validate_response(response_data)
         if result_error:
             return result_error
@@ -137,7 +170,9 @@ class ZibalIPGClient:
             merchant=self.merchant, track_id=track_id
         )
         request_data = request_model.model_dump_to_camel(exclude_none=True)
-        response_data = self._process_request(ZibalEndPoints.VERIFY, data=request_data)
+        response_data = self._process_request(
+            ZibalEndPoints.VERIFY, data=request_data
+        )
         result_error = self._validate_response(response_data)
         if result_error:
             return result_error
@@ -153,7 +188,9 @@ class ZibalIPGClient:
             merchant=self.merchant, track_id=track_id
         )
         request_data = inquiry_model.model_dump_to_camel(exclude_none=True)
-        response_data = self._process_request(ZibalEndPoints.INQUIRY, request_data)
+        response_data = self._process_request(
+            ZibalEndPoints.INQUIRY, request_data
+        )
         result_error = self._validate_response(response_data)
         if result_error:
             return result_error

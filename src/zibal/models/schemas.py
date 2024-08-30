@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, TypedDict, Type, TypeVar, Self
+from typing import List, Literal, Optional, Type, TypeVar
 
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
@@ -52,7 +52,9 @@ class TransactionRequireRequest(TransactionBase):
     @field_validator("amount")
     def in_correct_range(cls, amount):
         if not (2000000000 > amount > 1500):
-            raise ValueError("Amount must be in the range (2,000,000,000, 1,500)")
+            raise ValueError(
+                "Amount must be in the range (2,000,000,000, 1,500)"
+            )
         return amount
 
 
@@ -61,22 +63,6 @@ class FailedResultDetail(BaseModel):
 
     result_code: int
     result_meaning: str
-
-
-# Serialization: model instance (python) -> JSON data (or any kind of primtive data)
-# Deserialization:  JSON data (or data from client) -> model instance (python)
-class TransactionRequireRequestType(TypedDict):
-    """Used only for type annotating"""
-
-    merchant: str
-    amount: int
-    callback_url: str
-    description: Optional[str]
-    order_id: Optional[str]
-    mobile: Optional[str]
-    allowed_cards: Optional[List[str]]
-    ledger_id: Optional[str]
-    national_code: Optional[str]
 
 
 class TransactionRequireResponse(TransactionBase):
@@ -127,7 +113,9 @@ class TransactionVerifyResponse(TransactionBase):
     def from_camel_case(cls: Type[T], data: dict) -> T:
         status = data.get("status")
         if status is not None:
-            data["status_meaning"] = STATUS_CODES.get(status, "Unknown status")
+            data["status_meaning"] = STATUS_CODES.get(
+                status, "Unknown status"
+            )
         return super().from_camel_case(data)
 
 
@@ -163,6 +151,8 @@ class TransactionInquiryResponse(TransactionBase):
         status = data.get("status")
         wage = data.get("wage")
         if status is not None and wage is not None:
-            data["status_meaning"] = STATUS_CODES.get(status, "Unknown status")
+            data["status_meaning"] = STATUS_CODES.get(
+                status, "Unknown status"
+            )
             data["wage_meaning"] = WAGE_CODES.get(wage, "Unknown wage")
         return super().from_camel_case(data)
