@@ -77,21 +77,21 @@ def test_valid_transaction_require(mocker, mock_request):
 
 
 @pytest.mark.parametrize(
-    "request_data",
+    "amount, callback_url",
     [
-        ({"amount": 6969696969696969, "callback_url": "https://localhost:8000/"}),
-        ({"amount": 100, "callback_url": "https://localhost:8000/"}),
-        ({"amount": 50000, "callback_url": "invalid_url"}),
-        ({"amount": 50000}),
-        ({"callback_url": "https://localhost:8000/"}),
+        (6969696969696969, "https://localhost:8000/"),
+        (100, "https://localhost:8000/"),
+        (50000, "invalid_url"),
+        (50000, None),
+        (None, "https://localhost:8000/"),
     ],
 )
-def test_transaction_require_raises_validation_error(request_data):
+def test_transaction_require_raises_validation_error(amount, callback_url):
     # As long as the request data is valid, since the response is mocked, it
     # doesn't matter what is the request data
     client = ZibalIPGClient("zibal")
     with pytest.raises(ValidationError):
-        client.request_transaction(**request_data)
+        client.request_transaction(amount=amount, callback_url=callback_url)
 
 
 # --------------------------
@@ -165,7 +165,9 @@ def test_transaction_verify_raises_results_error(mock_request, response_data):
         ALREADY_VERIFIED_VERIFY_RESPONSE,
     ],
 )
-def test_transaction_verify_returns_results_error(mock_request, response_data):
+def test_transaction_verify_returns_results_error(
+    mock_request, response_data
+):
     mock_request(response_data)
 
     client = ZibalIPGClient("zibal", raise_on_invalid_result=False)
@@ -205,7 +207,8 @@ def test_valid_transaction_inquiry(mocker, mock_request):
     assert response_data_model.status == VALID_INQUIRY_RESPONSE["status"]
     assert response_data_model.amount == VALID_INQUIRY_RESPONSE["amount"]
     assert (
-        response_data_model.wage_meaning == WAGE_CODES[VALID_INQUIRY_RESPONSE["wage"]]
+        response_data_model.wage_meaning
+        == WAGE_CODES[VALID_INQUIRY_RESPONSE["wage"]]
     )
     assert (
         response_data_model.status_meaning
