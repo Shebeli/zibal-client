@@ -6,7 +6,7 @@ name = "zibal-client"
 packages = [{include = "zibal", from = "src"}]
 readme = "README.md"
 repository = "https://github.com/Shebeli/zibal-client"
-version = "0.3.2"
+version = "0.3.3"
 
 [tool.poetry.dependencies]
 pydantic = "^2.8.2"
