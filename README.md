@@ -31,7 +31,7 @@ request_data = client.request_transaction(
     callback_url="https://somecallbackurl.com",
 )
 
-print(requst_data.message)
+print(request_data.message)
 # success
 
 # ایجاد لینک پرداختی
